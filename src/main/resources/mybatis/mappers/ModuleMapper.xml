@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.tarena.ht.mapper.ModuleMapper">
+	
+	<sql id="baseInsertSql">
+		#{createBy,jdbcType=VARCHAR},
+		#{createDept,jdbcType=VARCHAR},
+		#{createTime,jdbcType=DATE},
+		#{updateBy,jdbcType=VARCHAR},
+		#{updateTime,jdbcType=DATE}
+	</sql>
+	
+	<sql id="baseUpdateSql">
+		<if test="createBy !=null">create_by = #{createBy},</if>
+		<if test="createDept !=null">create_dept = #{createDept},</if>
+		<if test="createTime !=null">create_time = #{createTime},</if>
+		<if test="updateBy !=null">update_by = #{updateBy},</if>
+		<if test="updateTime !=null">update_time = #{updateTime}</if>
+	</sql>
+	
+	
+
+	<!--查询全部的模块信息  -->
+	<select id="findAll" resultMap="moduleRM">
+		SELECT * FROM 
+	module_p m
+	         LEFT JOIN
+	(SELECT module_id p_id,NAME AS p_name from  module_p) p
+	        ON m.parent_id = p.p_id
+	ORDER BY order_no
+	
+	</select>
+	
+	<resultMap type="Module" id="moduleRM" autoMapping="true">
+		<id column="module_id" property="moduleId"/>
+		
+		<!--一对一关联映射  -->
+		<association property="parentModule" javaType="Module">
+			<id column="p_id" property="moduleId"/>
+			<result column="p_name" property="name"/>
+		</association>
+	</resultMap>
+	
+	<!--状态的修改  -->
+	<update id="updateState">
+		update module_p set state = #{state} where module_id in(
+			<foreach collection="moduleIds" item="moduleId" separator=",">
+				#{moduleId}
+			</foreach>
+		)
+	</update>
+	
+	<!--批量删除  -->
+	<delete id="deleteModules">
+		delete from module_p where module_id in (
+			<foreach collection="array" item="moduleId" separator=",">
+				#{moduleId}
+			</foreach>
+		)
+	</delete>
+	
+	
+	<!--模块的新增  -->
+	<insert id="saveModule">
+		insert into module_p values(
+			#{moduleId},
+			#{parentModule.moduleId},
+			#{name},
+			#{ctype},
+			#{state},
+			#{orderNo},
+			#{remark},
+			<include refid="baseInsertSql"/>
+		)
+	
+	</insert>
+	
+	
+	<!--根据moduleId查询模块信息  -->
+	<select id="findOne" resultMap="moduleRM">
+		SELECT * FROM 
+	module_p m
+	         LEFT JOIN
+	(SELECT module_id p_id,NAME AS p_name from  module_p) p
+	        ON m.parent_id = p.p_id
+	where module_id = #{moduleId}
+	</select>
+	
+	
+	<!--更新模块信息  -->
+	<update id="updateModule">
+		update module_p 
+		<set>
+			parent_id  = #{parentModule.moduleId},
+			name = #{name},
+			ctype = #{ctype},
+			state = #{state},
+			order_no = #{orderNo},
+			remark = #{remark},
+			<!--用过一引用Sql 实现sql的复用 简化代码的编写  -->
+			<include refid="baseUpdateSql"/>
+		</set>		
+		where module_id = #{moduleId}
+	</update>
+	
+	
+	<delete id="deleteRoleModuleByModuleIds">
+		delete from role_module_p where module_id in(
+			<foreach collection="array" item="moduleId">
+				#{moduleId}
+			</foreach>
+		)
+	</delete>
+	
+	
+</mapper>

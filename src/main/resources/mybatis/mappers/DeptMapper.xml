@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.tarena.ht.mapper.DeptMapper">
+	
+	<!--查询部门的全部信息  -->
+	<select id="findAll" resultMap="deptRM">
+		SELECT * FROM
+		 dept_p d
+		        LEFT JOIN
+		(SELECT dept_id p_id,dept_name p_NAME FROM dept_p)p
+		        ON d.parent_id = p.p_id
+		 ORDER BY dept_id
+	</select>
+	
+	<resultMap type="Dept" id="deptRM" autoMapping="true">
+		<id column="dept_id" property="deptId"/>
+		<!--其他属性驼峰规则自动完成映射  -->
+		
+		<!--自关联  一对一-->
+		<association property="parentDept" javaType="Dept">
+			<id column="p_id" property="deptId"/>
+			<result column="p_name" property="deptName"/>
+		</association>
+	</resultMap>
+	
+	
+	<!--状态的修改    接口文件传递的是一个array-->
+	<update id="updateState">
+		update dept_p set state = #{state} where dept_id in(
+			<!--map中的Key  -->
+			<foreach collection="deptIds" item="deptId" separator=",">
+				#{deptId}
+			</foreach>
+		)
+	</update>
+	
+	
+	<!--删除部门信息  -->
+	<delete id="deleteDepts">
+		delete from dept_p where dept_id in(
+			<foreach collection="array" item="deptId" separator=",">
+				#{deptId}
+			</foreach>
+		)
+	</delete>
+	
+	<insert id="saveDept">
+		insert into dept_p(dept_id,parent_id,dept_name,state,create_time)
+		values(
+			#{deptId},
+			#{parentDept.deptId},
+			#{deptName},
+			#{state},
+			#{createTime}
+		)
+	</insert>
+	
+	<select id="findOne" resultMap="deptRM">
+		select * from
+     dept_p d
+            left join
+    (select dept_id p_id,dept_name p_name from dept_p)p
+            on d.parent_id = p.p_id
+	where dept_id = #{deptId}
+	</select>
+	
+	
+	<update id="updateDept">
+		update dept_p set
+		parent_id = #{parentDept.deptId},
+		dept_name = #{deptName},
+		state = #{state},
+		update_time = #{updateTime}
+		
+		where dept_id =  #{deptId}
+	</update>
+	
+	
+	
+	
+	
+</mapper>

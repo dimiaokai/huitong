@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.tarena.ht.mapper.RoleMapper">
+	
+	
+	<!-- <select id="findAll" resultType="Role">
+		select * from role_p
+	</select> -->
+	
+	
+	<!--根据Id删除角色信息  -->
+	<delete id="deleteRoles"> 
+		delete from role_p where role_id in (
+			<foreach collection="array" item="roleId" separator=",">
+				#{roleId}
+			</foreach>
+		)
+	</delete>
+	
+	<insert id="saveRole">
+	
+	<!--动态的插入操作
+		prefix:拼接的前缀
+		suffix:拼接的后缀
+		suffixOverrides: 去除末尾指定的字符
+		prefixOverrides=""  去除开始指定的字符
+	  -->
+	insert into role_p
+		<trim prefix="(" suffix=")" suffixOverrides="," >
+			<if test="roleId !=null">role_id,</if>
+			<if test="name !=null">name,</if>
+			<if test="remarks !=null">remarks,</if>
+			<if test="orderNo !=null">order_no</if>
+		</trim> 
+	values
+	<trim prefix="(" suffix=")" suffixOverrides=",">
+		 <if test="roleId !=null">#{roleId},</if>
+		 <if test="name !=null">#{name},</if>
+		 <if test="remarks !=null">#{remarks},</if>
+		 <if test="orderNo !=null">#{orderNo}</if>  
+	</trim>
+	
+	<!-- insert into role_p
+	values(
+			#{roleId},
+			#{name},
+			#{remarks},
+			#{orderNo},
+			#{createBy,jdbcType=VARCHAR},
+			#{createDept,jdbcType=VARCHAR},
+			#{createTime,jdbcType=DATE},
+			#{updateBy,jdbcType=VARCHAR},
+			#{updateTime,jdbcType=DATE}	
+		) -->
+	
+	</insert>
+	
+	
+	<!--角色修改  -->
+	<update id="updateRole">
+		update role_p 
+		<set>
+			name = #{name},
+			remarks = #{remarks},
+			order_no = #{orderNo},
+			<if test="createBy !=null">create_by = #{createBy},</if>
+			<if test="createDept !=null">create_dept = #{createDept},</if>
+			<if test="createTime !=null">create_time = #{createTime},</if>
+			<if test="updateBy !=null">update_by = #{updateBy},</if>
+			<if test="updateTime !=null">update_time = #{updateTime}</if>
+		</set>
+		where role_id = #{roleId}
+	</update>
+	
+	
+	<!--关联删除中间表数据 role_module_p  -->
+	<delete id="delteRoleModuleByRoleIds">
+		delete from role_module_p where role_id in (
+			<foreach collection="array" item="roleId" separator=",">
+				#{roleId}
+			</foreach>
+		)
+	</delete>
+	
+	
+	
+	
+	
+</mapper>
